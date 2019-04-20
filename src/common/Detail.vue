@@ -1,57 +1,60 @@
 <template>
-  <transition name="slide">
-    <detail :songList="songList" :title="title" :bgImg="bgImg"></detail>
-  </transition>
+  <div class="detail">
+    <div class="detail-content">
+      <div class="back" @click="back"><i class="iconfont"></i>返回</div>
+      <h4 class="title">{{title}}</h4>
+      <div class="button-content"><button class="button">播放全部</button></div>
+      <div class="bg-img" ref="bgImg">
+        <img :src="bgImg" alt="">
+      </div>
+    </div>
+    <scroll class="song-list" ref="list">
+      <ul>
+        <li v-for="item in songList" :key="item.songid">
+          <div>{{item.albumname}}</div>
+          <p v-if="item.albumdesc">{{item.albumdesc}}</p>
+        </li>
+      </ul>
+    </scroll>
+    <v-loading v-show="!songList.length"></v-loading>
+  </div>
 </template>
 
 <script>
-import Detail from '../common/Detail'
-import {mapGetters} from 'vuex'
-import {ERR_OK} from '../api/config'
-import { getSingerDetail } from '../api/singer'
+import Scroll from '../common/Scroll'
+import VLoading from '../common/Loading'
 export default {
-  data () {
-    return {
-      songList: []
-    }
-  },
-  computed: {
-    ...mapGetters([
-      'singer'
-    ]),
-    title() {
-      return this.singer.name
+  props: {
+    title: {
+      type: String,
+      default: ''
     },
-    bgImg() {
-      return this.singer.avatar
-    }
-  },
-  mounted() {
-    getSingerDetail(this.singer.id).then((res) => {
-      if (res.code === ERR_OK) {
-        this.songList = this.data_callback(res.data.list)
+    bgImg: {
+      type: String,
+      default: ''
+    },
+    songList: {
+      type: Array,
+      default: function () {
+        return []
       }
-    })
+    }
   },
   components: {
-    Detail
+    Scroll, VLoading
+  },
+  mounted() {
+    this.$refs.list.$el.style.top = `${this.$refs.bgImg.clientHeight}px`
   },
   methods: {
-    data_callback(list) {
-      let ret = []
-      list.forEach((item) => {
-        let {musicData} = item
-        if (musicData.songid && musicData.albummid) {
-          ret.push(musicData)
-        }
-      })
-      return ret
+    back() {
+      this.$router.back()
     }
   }
 }
 </script>
 <style lang="stylus" scoped>
-.singer-detail
+.detail
   position absolute
   top 0
   bottom 0
@@ -104,7 +107,6 @@ export default {
     bottom 0
     width 100%
     background #333
-    overflow hidden
     ul
       padding 20px
       li

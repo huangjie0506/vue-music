@@ -1,8 +1,8 @@
 <template>
   <div class="singer">
-    <scroll class="singer-list">
+    <scroll class="singer-list" ref="listView">
       <div class="singer-wrapper">
-        <div class="list-group" v-for="item in singerList" :key="item.title">
+        <div class="list-group" ref="listGroup" v-for="item in singerList" :key="item.title">
           <div class="list-title">{{item.title}}</div>
           <div class="list-singer">
             <div class="singer-item" @click="selectItem(singerItem)" v-for="singerItem in item.singers"
@@ -15,9 +15,10 @@
           </div>
         </div>
       </div>
-      <div class="shortcut">
+      <div class="shortcut" @touchstart.stop.prevent="handleTouchstart"
+      @touchmove="handleTouchmove" @touchend.stop>
         <ul>
-          <li v-for="item in singerList" :key="item.title">{{item.title}}</li>
+          <li v-for="(item, index) in tagList" :key="index" :data-index="index">{{item}}</li>
         </ul>
       </div>
     </scroll>
@@ -26,7 +27,7 @@
 </template>
 
 <script>
-import Scroll from '../common/scroll'
+import Scroll from '../common/Scroll'
 import {getSingerList} from '../api/singer'
 import Signer from '../assets/js/singer'
 import { mapMutations } from 'vuex'
@@ -38,10 +39,18 @@ export default {
       singerList: []
     }
   },
+  computed: {
+    tagList() {
+      return this.singerList.map(item => {
+        return item.title.substring(0, 1)
+      })
+    }
+  },
   mounted () {
     getSingerList().then((res) => {
       this.singerList = this._normalize(res.data.list)
     })
+    this.touch = {}
   },
   methods: {
     selectItem(item) {
@@ -94,7 +103,29 @@ export default {
     },
     ...mapMutations({
       setSinger: 'SET_SINGER'
-    })
+    }),
+    handleTouchstart(e) {
+      const index = e.target.getAttribute('data-index')
+      this.touch.anchorIndex = index
+      this.touch.y1 = e.touches[0].pageY
+      this._scroll(index)
+    },
+    handleTouchmove(e) {
+      this.touch.y2 = e.touches[0].pageY
+      const detla = (this.touch.y2 - this.touch.y1) / 24 | 0
+      const index = parseInt(this.touch.anchorIndex) + detla
+      console.log(index)
+      this._scroll(index)
+    },
+    _scroll(index) {
+      // if (index < 0) {
+      //   index = 0
+      // } else if (index> this.listHeight.length - 2) {
+      //   index = this.listHeight.length - 2
+      // }
+      // this.scrollY = -this.listHeight[index]
+      this.$refs.listView.scrollToElement(this.$refs.listGroup[index], {})
+    }
   },
   components: {
     Scroll
@@ -120,11 +151,11 @@ export default {
         padding-left 20px
         background #333
       .list-singer
-        padding 20px 0 0 30px
+        padding 20px 30px 0 30px
         .singer-item
           display flex
           align-items center
-          padding 0 20px 20px 0
+          padding-bottom  20px
           .singer-img
             width 40px
             height 40px
@@ -146,6 +177,7 @@ export default {
     padding 20px 0
     background #333
     border-radius 12px
+    z-index 30
     ul
       display flex
       flex-direction column
@@ -155,7 +187,7 @@ export default {
         height 24px
         color #fff
         text-align center
-        line-height 20px
+        line-height 24px
         white-space nowrap
         overflow hidden
 </style>

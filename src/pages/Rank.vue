@@ -1,5 +1,5 @@
 <template>
-  <div class="rank" ref="rank">
+  <scroll class="rank" ref="rank">
     <ul class="rank-wrapper">
       <router-link to="/rank/${item.id}" tag="li" class="rank-item"
       v-for="item in rankData" :key="item.id" >
@@ -13,11 +13,13 @@
         </div>
       </router-link>
     </ul>
-  </div>
+    <loading v-show="!rankData.length"></loading>
+  </scroll>
 </template>
 
 <script>
-import BScroll from 'better-scroll'
+import Scroll from '../common/Scroll'
+import Loading from '../common/Loading'
 import {ERR_OK} from '../api/config'
 import {getTopList} from '../api/rank'
 export default {
@@ -30,11 +32,11 @@ export default {
     getTopList().then((res) => {
       if (res.code === ERR_OK) {
         this.rankData = res.data.topList
-        this.$nextTick(function() {
-          this.scroll = new BScroll(this.$refs.rank, {click: true})
-        })
       }
     })
+  },
+  components: {
+    Loading, Scroll
   }
 }
 </script>

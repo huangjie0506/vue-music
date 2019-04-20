@@ -1,5 +1,5 @@
 <template>
-  <div class="recommend" ref="recommend">
+  <scroll class="recommend">
     <div class="recommend-wrapper">
       <m-slider :imgData="datalist"></m-slider>
       <div class="recommend-title">热门歌单推荐</div>
@@ -15,12 +15,14 @@
         </li>
       </ul>
     </div>
-  </div>
+    <loading v-show="!discList.length"></loading>
+  </scroll>
 </template>
 
 <script>
 import MSlider from '../common/Swiper'
-import BScroll from 'better-scroll'
+import Scroll from '../common/Scroll'
+import Loading from '../common/Loading'
 import { getRecommend, getDiscList } from '../api/recommend'
 import { ERR_OK } from '../api/config'
 export default {
@@ -31,16 +33,13 @@ export default {
     }
   },
   components: {
-    MSlider
+    MSlider, Scroll, Loading
   },
   mounted() {
     getRecommend().then((res) => {
       if (res.code === ERR_OK) {
         this.datalist = res.data.slider
       }
-      this.$nextTick(function() {
-        this.scroll = new BScroll(this.$refs.recommend, {click: true})
-      })
     }).catch((err) => {
       console.log(err)
     })
